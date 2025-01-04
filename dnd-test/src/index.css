@@ -1,5 +1,12 @@
 .app{
-    
+    background-color: rgb(187, 105, 200);
+}
+
+.table-board{
+    background-color: rgb(46, 74, 165);
+    padding: 30px;
+    margin: 30px;
+    color: white;
 }
 
 .table{
@@ -7,10 +14,16 @@
     padding: 20px;
     background-color: antiquewhite;
     border: solid black 3px;
+    color: black;
 }
 
 .row{
     background-color: aquamarine;
+}
+
+th{
+    border: solid black 2px;
+    background-color: rgb(246, 189, 189);
 }
 
 td{
