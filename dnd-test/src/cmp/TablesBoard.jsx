@@ -2,7 +2,7 @@ import { Table } from "./Table.jsx"
 import { Row } from "./Row.jsx"
 import { useState } from "react"
 
-import { closestCorners, DndContext, DragOverlay } from '@dnd-kit/core'
+import { closestCorners, rectIntersection , DndContext, DragOverlay } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 
 export function TablesBoard() {
@@ -151,12 +151,14 @@ export function TablesBoard() {
   return (
     <div className="table-board">
       <h3>SAR Board</h3>
-      <DndContext 
-          key="table-board"
-          collisionDetection={closestCorners} 
-          onDragStart={onDragStart}
-          onDragOver={onDragOver}
-          onDragEnd={onDragEnd}>
+      <DndContext
+        key="table-board"
+        collisionDetection={rectIntersection} // that thing that solve the bottom-top problem
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragEnd={onDragEnd}
+      >
+
       {
         tables.map(table=>
           <Table key={table.tableName} table={table} activeRow={activeRow} />)
@@ -165,9 +167,14 @@ export function TablesBoard() {
       {/* DragOverlay */}
       <DragOverlay>
         {activeRow ? (
-          <div className="drag-active">
-            {activeRow.text} ({activeRow.number})
-          </div>
+          <table>
+            <tbody>
+              <Row
+                id={activeRow.id}
+                tableName={'hello'}
+                row={activeRow}/>
+            </tbody>
+          </table>
         ) : null}
       </DragOverlay>
 

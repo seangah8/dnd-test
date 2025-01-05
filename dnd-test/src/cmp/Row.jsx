@@ -9,16 +9,13 @@ export function Row({ id, tableName, row }) {
   const style = {
     transition,
     transform: CSS.Transform.toString(transform),
-    height: isInvisible ? "0px" : undefined,
-    visibility: isInvisible ? "hidden" : undefined,
-    background: isInvisible ? "none" : undefined,
   };
 
   return (
     <tr ref={setNodeRef} style={style} {...attributes} {...listeners} className="row">
-      <td>{tableName}</td>
-      <td>{row.text}</td>
-      <td>{row.number}</td>
+      <td className='tableName'>{tableName}</td>
+      <td className='text'>{row.text}</td>
+      <td className='number'>{row.number}</td>
     </tr>
   );
 }
