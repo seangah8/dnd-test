@@ -29,3 +29,13 @@ th{
 td{
     border: solid black 2px;
 }
+
+
+tr {
+    height: 40px; /* Adjust to match your actual row height */
+  }
+  
+  tr[style*="visibility: hidden"] {
+    background: none; /* Ensure no background for hidden rows */
+  }
+  

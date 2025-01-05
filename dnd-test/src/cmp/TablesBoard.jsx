@@ -1,12 +1,13 @@
 import { Table } from "./Table.jsx"
+import { Row } from "./Row.jsx"
 import { useState } from "react"
 
-import { closestCorners, DndContext } from '@dnd-kit/core'
+import { closestCorners, DndContext, DragOverlay } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 
 export function TablesBoard() {
   
-  // storage
+  // Storage
   const [tables, setTables] = useState([
     { tableName: "SAR1",
       rows: [
@@ -33,62 +34,144 @@ export function TablesBoard() {
     },
   ])
 
+  const [activeRow, setActiveRow] = useState(null) // the row you currently drag 
+
+  const onDragStart = event => {
+    const { active } = event
+    const sourceTable = tables.find(table =>
+      table.rows.some(row => row.id === active.id))
+
+    if (sourceTable) {
+      const activeRow = sourceTable.rows.find(row =>
+         row.id === active.id)
+      setActiveRow(activeRow)
+    }
+  }
+
+  const onDragOver = event => {
+    const { active, over } = event;
   
-  const onDragEnd = (event) => {
+    if (!over || active.id === over.id) return;
+  
+    const sourceTableIndex = tables.findIndex(table =>
+      table.rows.some(row => row.id === active.id)
+    );
+  
+    const destinationTableIndex = tables.findIndex(table =>
+      table.rows.some(row => row.id === over.id)
+    );
+  
+    if (sourceTableIndex !== -1 && destinationTableIndex !== -1) {
+      const sourceRowIndex = tables[sourceTableIndex].rows.findIndex(
+        row => row.id === active.id
+      );
+  
+      const destinationRowIndex = tables[destinationTableIndex].rows.findIndex(
+        row => row.id === over.id
+      );
+  
+      // If the destination is the same table, let the current behavior handle it
+      if (sourceTableIndex === destinationTableIndex) return;
+  
+      const movedRow = tables[sourceTableIndex].rows[sourceRowIndex];
+  
+      setTables(prevTables => {
+        const newTables = [...prevTables];
+  
+        // Remove row from source table
+        newTables[sourceTableIndex] = {
+          ...newTables[sourceTableIndex],
+          rows: newTables[sourceTableIndex].rows.filter(
+            row => row.id !== active.id
+          ),
+        };
+  
+        // Insert row into destination table dynamically
+        newTables[destinationTableIndex] = {
+          ...newTables[destinationTableIndex],
+          rows: [
+            ...newTables[destinationTableIndex].rows.slice(0, destinationRowIndex),
+            movedRow,
+            ...newTables[destinationTableIndex].rows.slice(destinationRowIndex),
+          ],
+        };
+  
+        return newTables;
+      });
+    }
+  };
+
+  const onDragEnd = event => {
     console.log(event)
     const { active, over } = event
+    setActiveRow(null) // Clear the active row when drag ends
   
     if (!over || active.id === over.id) return
   
-    const sourceTable = tables.find(table =>
+    const sourceTableIndex = tables.findIndex(table =>
       table.rows.some(row => row.id === active.id))
   
-    const destinationTable = tables.find(table =>
+    const destinationTableIndex = tables.findIndex(table =>
       table.rows.some(row => row.id === over.id))
 
-    if(sourceTable && destinationTable){
+    if (sourceTableIndex !== -1 && destinationTableIndex !== -1) {
 
-      // Dragging within the same table
-      if(sourceTable.tableName === destinationTable.tableName){
+      const sourceRowIndex = tables[sourceTableIndex].rows.findIndex(row =>
+         row.id === active.id)
 
-        const sourceTableIndex = tables.findIndex(
-          table => table.tableName === sourceTable.tableName)
+      const destinationRowIndex = tables[destinationTableIndex].rows.findIndex(row =>
+         row.id === over.id)
 
-        const oldRowIndex = sourceTable.rows.findIndex(row =>
-           row.id === active.id)
+      const movedRow = tables[sourceTableIndex].rows[sourceRowIndex]
 
-        const newRowIndex = destinationTable.rows.findIndex(row =>
-           row.id === over.id)
-    
-        setTables(prevTables =>
-          prevTables.map((table, index) =>
-            index === sourceTableIndex 
-            ? {...table, rows: arrayMove(
-              table.rows, oldRowIndex, newRowIndex)}
-            : table
-          )
-        )
-      }
+      setTables(prevTables => {
+        const newTables = [...prevTables]
+
+        // Remove row from source table
+        newTables[sourceTableIndex] = {
+          ...newTables[sourceTableIndex],
+          rows: newTables[sourceTableIndex].rows.filter(row => row.id !== active.id)
+        }
+
+        // Add row to destination table
+        newTables[destinationTableIndex] = {
+          ...newTables[destinationTableIndex],
+          rows: [
+            ...newTables[destinationTableIndex].rows.slice(0, destinationRowIndex),
+            movedRow,
+            ...newTables[destinationTableIndex].rows.slice(destinationRowIndex)
+          ]
+        }
+
+        return newTables
+      })
     }
   }
 
   return (
     <div className="table-board">
       <h3>SAR Board</h3>
+      <DndContext 
+          key="table-board"
+          collisionDetection={closestCorners} 
+          onDragStart={onDragStart}
+          onDragOver={onDragOver}
+          onDragEnd={onDragEnd}>
       {
         tables.map(table=>
-          <DndContext 
-          key={table.tableName}
-          collisionDetection={closestCorners} 
-          onDragEnd={onDragEnd}>
-
-            <Table table={table} />
-
-          </DndContext>
-        )
+          <Table key={table.tableName} table={table} activeRow={activeRow} />)
       }
-      
+
+      {/* DragOverlay */}
+      <DragOverlay>
+        {activeRow ? (
+          <div className="drag-active">
+            {activeRow.text} ({activeRow.number})
+          </div>
+        ) : null}
+      </DragOverlay>
+
+      </DndContext>
     </div>
   )
 }
-
